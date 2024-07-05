@@ -1,0 +1,94 @@
+import random
+
+class Card:
+    def __init__(self, suit, value):
+        self.suit = suit
+        self.value = value
+
+class Deck:
+    def __init__(self, num_packs):
+        self.cards = []
+        self.num_packs = num_packs
+        self.build()
+
+    def build(self):
+        suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades']
+        values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
+        for _ in range(self.num_packs):
+            for suit in suits:
+                for value in values:
+                    self.cards.append(Card(suit, value))
+
+    def shuffle(self):
+        random.shuffle(self.cards)
+
+    def deal_card(self):
+        if len(self.cards) > 0:
+            return self.cards.pop(0)
+        else:
+            return None
+
+class Player:
+    def __init__(self, name):
+        self.name = name
+        self.collected_cards = []
+
+    def collect_cards(self, cards):
+        self.collected_cards.extend(cards)
+
+    def count_cards(self):
+        return len(self.collected_cards)
+
+class SnapGame:
+    def __init__(self, num_packs, matching_condition):
+        self.deck = Deck(num_packs)
+        self.deck.shuffle()
+        self.players = [Player("Player 1"), Player("Player 2")]
+        self.matching_condition = matching_condition
+
+    def run(self):
+        common_pile = []
+        current_player = 0
+        
+        while len(self.deck.cards) > 0:
+            current_card = self.deck.deal_card()
+            common_pile.append(current_card)
+            
+            if len(common_pile) >= 2:
+                if self.is_snap(current_card, common_pile[-2]):
+                    snap_player = random.randint(0, 1)
+                    self.players[snap_player].collect_cards(common_pile)
+                    common_pile = []
+                    
+            current_player = (current_player + 1) % 2
+        
+        self.end_game()
+
+    def is_snap(self, card1, card2):
+        if self.matching_condition == "value":
+            return card1.value == card2.value
+        elif self.matching_condition == "suit":
+            return card1.suit == card2.suit
+        elif self.matching_condition == "both":
+            return card1.value == card2.value and card1.suit == card2.suit
+        else:
+            raise ValueError("Invalid matching condition")
+
+    def end_game(self):
+        cards_player1 = self.players[0].count_cards()
+        cards_player2 = self.players[1].count_cards()
+        
+        if cards_player1 > cards_player2:
+            print(f"Player 1 wins with {cards_player1} cards!")
+        elif cards_player2 > cards_player1:
+            print(f"Player 2 wins with {cards_player2} cards!")
+        else:
+            print("It's a draw!")
+
+
+if __name__ == "__main__":
+    num_packs = int(input("Enter number of packs to use: "))
+    matching_condition = input("Choose matching condition (value/suit/both): ")
+
+    game = SnapGame(num_packs, matching_condition)
+    game.run()
